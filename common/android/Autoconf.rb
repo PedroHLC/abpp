@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 require_relative '../../main.rb'
 require_relative '../../known_commands.rb'
@@ -12,7 +12,6 @@ class AutoconfToAndroid < Patch
 		super(target)
 		@depends = [FixPkgNameToAndroid, GetNDKHostArch]
 		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'] == nil
-		@target.cache['libffi.install'] = :deleted
 	end
 	
 	def apply()

@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 require_relative '../../main.rb'
 require_relative '../../known_commands.rb'

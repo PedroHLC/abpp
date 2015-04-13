@@ -2,31 +2,48 @@
 Universal patcher for ArchBuild-like source packages
 
 ## Test instructions
-At this version, you still need to create a ruby file for testing it
+Link 'helper.rb' as  'abpp' in any folder listed in your PATH envvar.
+Run anywhere where you have write permissions:
 ```
-#!/bin/ruby
+abpphelper download libffi ./libffi
+abpphelper specific ./libffi android --env='ndk-plat-9-arm'
+```
 
-require 'fileutils'
-require_relative '../abpp/io.rb'
-require_relative '../abpp/specifics/android/libffi.rb'
-require_relative '../abpp/pkgmanagers/yaourt.rb'
+## Custom patch create instructions
+```
+#!/usr/bin/env ruby
 
-TEST_PKGNAME = 'libffi'
-TEST_INPATH = './'+TEST_PKGNAME
-TEST_OUTPATH = './android-'+TEST_PKGNAME
+require 'abpp/main.rb'
 
-$pkgmngr = ABPP::PkgMngr::Yaourt.new()
-$pkgmngr.download_source(TEST_PKGNAME, TEST_INPATH)
+class CustomPatchUniqueClass < ABPP::Patch
+	def initialize(target)
+		super(target)
+		# Loads/Interprets file we want to patch which were not loaded yet
+		if @target.cache['PKGBUILD'] == nil
+			@target.cache['PKGBUILD'] = ABPP::PKGBUILD.new (target)
+		end
+	end
+	
+	def apply()
+		super()
+		# Alias
+		pkgbuild  = @target.cache['PKGBUILD']
+		
+		# Search last occurence of 'pkgname' position
+		original_pkgname_index = pkgbuild.find_var_index('pkgname').last
+		
+		# Rename that last occurence of 'pkgname'
+		pkgbuild.childs[original_pkgname_index].rename('pkgname_example')
+		
+		# Creates a new variable
+		example_var = Variable.new('somenewvariable', "${some_bash_env}", pkgbuild)
+		
+		# Add variable to file
+		pkgbuild.childs.insert(original_pkgname_index+1, example_var)
+	end
+end
 
-$androidenv = ABPP::AndroidEnviroment.new('android', 9 ,'arm', 'arm-linux-androideabi', '4.8',
-	'/opt/android-ndk/platforms/android-9/arch-arm',
-	'/opt/android-ndk/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-${ndk_hostarch}'
-)
+# Add patch as the specific one for some package
+ABPP::SPECIFICS['pkgname'] = CustomPatchUniqueClass
 
-test_pkg = ABPP::Package.new(TEST_INPATH)
-patch = ABPP::LibFFIToAndroid.new(test_pkg)
-patch.apply()
-
-FileUtils.mkdir(TEST_OUTPATH) if !Dir.exists?(TEST_OUTPATH)
-test_pkg.save_in(TEST_OUTPATH)
 ```
