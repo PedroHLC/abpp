@@ -30,9 +30,8 @@ class LibFFIToAndroid < Patch
 		confg.set_var('host','${ndk_target}')
 		
 		package = pkgbuild.find_func('package').last
-		package.childs.delete_at(package.find_command_index('install').last)
-		#license_install = package.find_command('install').last
-		#license_install.arguments[2].sub!('"$pkgdir"', '"${ndk_sysroot}/${pkgdir}"') #!TODO: Fix
+		license_install = package.find_command('install').last
+		license_install.arguments[2].sub!('"$pkgdir"', '"${pkgdir}/${ndk_sysroot}"')
 	end
 end
 

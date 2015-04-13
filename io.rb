@@ -7,7 +7,7 @@ require_relative 'known_commands.rb'
 module ABPP
 
 module Utils
-	REGEX_SHELLTOKEN_SCANNER = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\#.*\n|[^\s\=]*\$\{\S*\}\S*|\-\S*|(?<!\\)[\(\)\=\{\},\n]|[^\s#\(\)=\{\},\\]*/
+	REGEX_SHELLTOKEN_SCANNER = /"(?:[^"\\]|\\.)*"\S*|'(?:[^'\\]|\\.)*'|\#.*\n|[^\s\=]*\$\{\S*\}\S*|\-\S*|(?<!\\)[\(\)\=\{\},\n]|[^\s#\(\)=\{\},\\]*/
 	
 	def self.list_shell_tokens (str)
 		results = []
