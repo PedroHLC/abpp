@@ -8,7 +8,7 @@ At this version, you still need to create a ruby file for testing it
 
 require 'fileutils'
 require_relative '../abpp/io.rb'
-require_relative '../abpp/common/android/Autoconf.rb'
+require_relative '../abpp/specifics/android/libffi.rb'
 require_relative '../abpp/pkgmanagers/yaourt.rb'
 
 TEST_PKGNAME = 'libffi'
@@ -24,7 +24,7 @@ $androidenv = ABPP::AndroidEnviroment.new('android', 9 ,'arm', 'arm-linux-androi
 )
 
 test_pkg = ABPP::Package.new(TEST_INPATH)
-patch = ABPP::AutoconfToAndroid.new(test_pkg)
+patch = ABPP::LibFFIToAndroid.new(test_pkg)
 patch.apply()
 
 FileUtils.mkdir(TEST_OUTPATH) if !Dir.exists?(TEST_OUTPATH)

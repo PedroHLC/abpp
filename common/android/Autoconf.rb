@@ -28,11 +28,7 @@ class AutoconfToAndroid < Patch
 		pkgbuild.childs.insert(0, Variable.new('ndk_target', $androidenv.target, pkgbuild))
 		pkgbuild.childs.insert(1, Variable.new('ndk_sysroot', $androidenv.sysroot, pkgbuild))
 		
-		pkgbuild.childs.delete_at(pkgbuild.find_func_index('check').last)
-		pkgbuild.childs.delete_at(pkgbuild.find_var_index('checkdepends').last)
-		pkgbuild.childs.delete_at(pkgbuild.find_var_index('install').last)
-		
-		pkgbuild.find_var('depends').last.set_value(['\'android-ndk\'','\'make\''])
+		pkgbuild.find_var('depends').last.set_value(['\'android-ndk\''])  #!TODO: Add instead
 		
 		pkgdesc = pkgbuild.find_var('pkgdesc').last
 		pkgdesc.set_value("\"#{Utils.unquote(pkgdesc.value[0])} (${_target})\"")
@@ -51,11 +47,6 @@ class AutoconfToAndroid < Patch
 		confg.disable('shared')
 		confg.set_var('prefix','${ndk_sysroot}')
 		confg.set_var('host','${ndk_target}')
-		
-		package = pkgbuild.find_func('package').last
-		package.childs.delete_at(package.find_command_index('install').last)
-		#license_install = package.find_command('install').last
-		#license_install.arguments[2].sub!('"$pkgdir"', '"${ndk_sysroot}/${pkgdir}"') #!TODO: Fix
 	end
 end
 

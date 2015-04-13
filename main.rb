@@ -2,6 +2,8 @@
 
 module ABPP
 
+SPECIFICS = {}
+
 module Utils
 	DEBUG_ALLOW=[:error] #:error :warning :info :flood
 	REGEX_BASHVAR_SCANNER = /\$\{(\w*)\}|\$(\w*)/
