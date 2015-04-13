@@ -7,17 +7,12 @@ require_relative 'known_commands.rb'
 module ABPP
 
 module Utils
-	DEBUG_ALLOW=[:error]
 	REGEX_SHELLTOKEN_SCANNER = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\#.*\n|[^\s\=]*\$\{\S*\}\S*|\-\S*|(?<!\\)[\(\)\=\{\},\n]|[^\s#\(\)=\{\},\\]*/
 	
 	def self.list_shell_tokens (str)
 		results = []
 		str.scan(REGEX_SHELLTOKEN_SCANNER) {|match| results << match }
 		return results
-	end
-	
-	def self.debug (str, target=:info)
-		puts str if (DEBUG_ALLOW.include?(target))
 	end
 	
 	def self.next_util_token (token_list, ti)
@@ -40,7 +35,7 @@ end
 
 module ErrorHander
 	def self.unexpected_token (token, level, ti, trace)
-		Utils.debug(sprintf('### Unexpected token(%d) founded: \'%s\' at %s through \'%s\'', ti, token, level, trace), :error)
+		Utils.log(sprintf('### Unexpected token(%d) founded: \'%s\' at %s through \'%s\'', ti, token, level, trace), :error)
 		exit();
 	end
 end
@@ -60,25 +55,25 @@ class ShellDocument
 		token = token_list[ti]
 		while (ti < tl)
 			if token[0] == ?#
-				Utils.debug('< Comment: '+token)
+				Utils.log('< Comment: '+token)
 				token = token_list[ti+=1]
 				next
 			elsif token[0] == ?} || token == nil #EOF
 				level.pop
 				return ti+1
 			elsif token == "\n"
-				Utils.debug('< Empty line', :flood)
+				Utils.log('< Empty line', :flood)
 				token = token_list[ti+=1]
 				next
 			elsif token.strip.size == 0
-				Utils.debug('< Empty token', :flood)
+				Utils.log('< Empty token', :flood)
 				token = token_list[ti+=1]
 			elsif
 				token = token_list[ti+=1]
 				if token[0] == ?(
 					params = []
 					key = token_list[ti-1]
-					Utils.debug('? Function or command?: '+key)
+					Utils.log('? Function or command?: '+key)
 					
 					if token.size > 1 # Bug bypass
 						if token[token.size-1] == ?)
@@ -94,11 +89,11 @@ class ShellDocument
 							token = token_list[ti+=1]
 							break;
 						elsif token[0] == ?,
-							Utils.debug('< Useless comma')
+							Utils.log('< Useless comma')
 						elsif token.strip.size == 0
-							Utils.debug('< Empty token', :flood)
+							Utils.log('< Empty token', :flood)
 						else
-							Utils.debug('< Argument: '+token)
+							Utils.log('< Argument: '+token)
 							params << token
 						end
 					end if token[token.size-1] != ?)
@@ -108,32 +103,28 @@ class ShellDocument
 						token = token_list[ti=next_ti] if token_list[next_ti][0] == ?{
 						
 						if token[0] == ?{
-							Utils.debug('< Function: '+key)
+							Utils.log('< Function: '+key)
 							if token[0].size > 1
-								Utils.debug('! Ignoring 1 token by accident, regex code maybe is needing a revision', :error)
+								Utils.log('! Ignoring 1 token by accident, regex code maybe is needing a revision', :error)
 							end
 							token = token_list[ti+=1]
 							
 							#Add function
-							if key.include?('/configure')
-								func_final = KnownCommands::Configure(key, params, level.last) 
-							else
-								func_final = Function.new(key, params, level.last)
-							end
+							func_final = Function.new(key, params, level.last)
 							level.last.childs << func_final
 							level << func_final
 							ti = interpret(token_list, ti, level)
 							
-							Utils.debug('X Finished func: '+key)
+							Utils.log('X Finished func: '+key)
 							break
 						elsif token == "\n" or token[0] == ?;
-							Utils.debug('< Shell Command: '+key)
+							Utils.log('< Shell Command: '+key)
 							token = token_list[ti+=1]
 							command_final = Command.new(key, params, level.last, true)
 							level.last.childs << command_final
 							break
 						elsif token.strip.size == 0
-							Utils.debug('< Empty token', :flood)
+							Utils.log('< Empty token', :flood)
 						else
 							ErrorHander.unexpected_token(token, level, ti, '?FunCmd');
 						end
@@ -156,9 +147,9 @@ class ShellDocument
 								token = token_list[ti+=1]
 								break
 							elsif token.strip.size == "\n"
-								Utils.debug('< Empty line', :flood)
+								Utils.log('< Empty line', :flood)
 							elsif token.strip.size == 0
-								Utils.debug('< Empty token', :flood)
+								Utils.log('< Empty token', :flood)
 							else
 								var_value << token
 							end
@@ -172,20 +163,24 @@ class ShellDocument
 								token = token_list[ti+=1]
 								break
 							elsif token.strip.size == 0
-								Utils.debug('< Empty token', :flood)
+								Utils.log('< Empty token', :flood)
 							else
 								break
 							end
 						end
 					end
-					Utils.debug('< Variable "'+var_name+'", value: '+var_value.to_s)
+					Utils.log('< Variable "'+var_name+'", value: '+var_value.to_s)
 					
 					var_final = Variable.new(var_name, var_value, level.last)
 					level.last.childs << var_final
 				elsif token == "\n"
 					key = token_list[ti-1]
-					Utils.debug('< Simple command: "'+key+'"')
-					command_final = Command.new(key, nil, level.last)
+					Utils.log('< Simple command: "'+key+'"')
+					if key.end_with?('/configure')
+						command_final = KnownCommands::Configure.new(key, nil, level.last) 
+					else
+						command_final = Command.new(key, nil, level.last)
+					end
 					level.last.childs << command_final
 					token = token_list[ti+=1]
 				else
@@ -197,21 +192,30 @@ class ShellDocument
 							token = token_list[ti+=1]
 							break
 						elsif token.strip.size == 0
-							Utils.debug('< Empty token', :flood)
+							Utils.log('< Empty token', :flood)
 						else
-							params << token
+							if token_list[ti+1][0] == ?=
+								params << token_list[ti..(ti+3)].join()
+								ti+=2
+							else
+								params << token
+							end
 						end
 						token = token_list[ti+=1]
 					end
 					
-					Utils.debug('< Complex command: "'+key+'", params:'+params.to_s)
-					command_final = Command.new(key, params, level.last)
+					Utils.log('< Complex command: "'+key+'", params:'+params.to_s)
+					if key.end_with?('/configure')
+						command_final = KnownCommands::Configure.new(key, params, level.last) 
+					else
+						command_final = Command.new(key, params, level.last)
+					end
 					level.last.childs << command_final
 				end
 			end
 		end
 		# Shouldn't happen at all...
-		Utils.debug('< Probably overflowed', :warning)
+		Utils.log('< Probably overflowed', :warning)
 		level.pop
 		return ti
 	end
@@ -232,9 +236,10 @@ end
 class Package
 	def save_in (new_path)
 		@cache.each { |doc_path, doc_val| 
+			next if doc_val == :deleted
 			doc_val.save_as(new_path) if !doc_val.nil?
 		}
-		file_list = Utils.recursive_files(@path)#Dir[ File.join(@path, '**', '*') ].reject { |p| File.directory? p }
+		file_list = Utils.recursive_files(@path)
 		file_list.each { |filename|
 			if @cache[filename].nil?
 				dest = File.join(new_path, filename)

@@ -3,7 +3,9 @@
 module ABPP
 
 module Utils
+	DEBUG_ALLOW=[:error] #:error :warning :info :flood
 	REGEX_BASHVAR_SCANNER = /\$\{(\w*)\}|\$(\w*)/
+	
 	def self.list_shell_varref (str)
 		results = {}
 		# TODO: Ignore Backslash
@@ -17,6 +19,21 @@ module Utils
 			results[result] = result if !result.nil?
 		}
 		return results.values
+	end
+	
+	def self.log (str, target=:info)
+		puts str if (DEBUG_ALLOW.include?(target))
+	end
+	
+	def self.unquote (str)
+		match = /"(.*)"|'(.*)'/.match(str)
+		if !match
+			return str
+		elsif !match[1].nil?
+			return match[1]
+		elsif !match[2].nil?
+			return match[2]
+		end
 	end
 end
 
@@ -99,7 +116,7 @@ class Variable
 		out.write @key
 		out.write '='
 		out.write '(' if @value.size > 1
-		@value.each { |val| out.write val }
+		out.write @value.join (' ')
 		out.write ')' if @value.size > 1
 		out.write(beautiful ? "\n" : ';')
 	end
@@ -141,6 +158,18 @@ class Command
 	def set_arguments(new_arguments)
 		@arguments = new_arguments
 		@depends = ((!new_arguments.nil? and !new_arguments.empty?) ? Utils.list_shell_varref(@key + ' ' + @arguments.join(' ')) : nil)
+	end
+	
+	def set_argument(i, value)
+		@arguments = [] if @arguments.nil?
+		if i.nil?
+			@arguments << value
+		elsif @arguments[i].nil?
+			@arguments.inser(i, value)
+		else
+			@arguments[i] = value
+		end
+		@depends = Utils.list_shell_varref(@key + ' ' + @arguments.join(' '))
 	end
 	
 	def rename (new_key, update_global=true)
@@ -304,6 +333,24 @@ class PKGBUILD < ShellDocument
 	
 	def set_pgpkey (i, key)
 		#TODO!
+	end
+	
+	def set_option (key, value) #value = true, false, nil
+		options_var = find_var('options')
+		new_value = (value ? "'#{key}'" : "'!#{key}'")
+		if options_var.empty?
+			options_var = Variable.new('options', new_value, self)
+			@childs.insert(find_var_index('source').first, options_var)
+		else
+			options_var = options_var.last
+			options_var.value.each { |val|
+				if val.include?(key)
+					val = new_value
+					return
+				end
+			}
+			options_var.value << new_value
+		end
 	end
 end
 
