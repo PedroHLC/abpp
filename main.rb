@@ -1,8 +1,11 @@
 #!/usr/bin/env ruby
 
 module ABPP
+attr_accessor :LAST_ADDED
 
+@@LAST_ADDED = nil
 SPECIFICS = {}
+COMMON = {}
 
 module Utils
 	DEBUG_ALLOW=[:error] #:error :warning :info :flood

@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../../main.rb'
+require_relative '../../io.rb'
 require_relative '../../known_commands.rb'
 require_relative 'FixPkgName.rb'
 require_relative 'GetNDKHostArch.rb'
@@ -48,5 +49,7 @@ class AutoconfToAndroid < Patch
 		confg.set_var('host','${ndk_target}')
 	end
 end
+
+@@LAST_ADDED = COMMON['android/Autoconf'] = AutoconfToAndroid
 
 end #namespace

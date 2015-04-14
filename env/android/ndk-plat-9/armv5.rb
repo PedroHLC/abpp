@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require_relative '../../common/android/utils.rb'
+require_relative '../../../common/android/utils.rb'
 
 $androidenv = ABPP::AndroidEnviroment.new(
 	'android', #"pkgname" prefix

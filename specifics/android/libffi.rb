@@ -35,6 +35,6 @@ class LibFFIToAndroid < Patch
 	end
 end
 
-SPECIFICS['libffi'] = LibFFIToAndroid
+@@LAST_ADDED = SPECIFICS['android/libffi'] = LibFFIToAndroid
 
 end #namespace

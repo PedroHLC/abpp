@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../../main.rb'
+require_relative '../../io.rb'
 require_relative 'utils.rb'
 
 module ABPP
@@ -27,5 +28,7 @@ class FixPkgNameToAndroid < Patch
 		pkgbuild.childs.insert(original_pkgname_index+1, new_pkgname)
 	end
 end
+
+@@LAST_ADDED = COMMON['android/FixPkgName'] = FixPkgNameToAndroid
 
 end #namespace

@@ -3,10 +3,16 @@ Universal patcher for ArchBuild-like source packages
 
 ## Test instructions
 Link 'helper.rb' as  'abpp' in any folder listed in your PATH envvar.
+
+The following example will **D**ownload, **P**atch, save to './output', **M**ake and **I**nstall 'libffi' for Android (targeting ARMv5 using NDK Platform 9)
 Run anywhere where you have write permissions:
 ```
-abpphelper download libffi ./libffi
-abpphelper specific ./libffi android --env='ndk-plat-9-arm'
+abpphelper  -DPMI --output=./output --env=android/ndk-plat-9/armv5 libffi android
+```
+
+For command options help, use:
+```
+abpphelper  --help
 ```
 
 ## Custom patch create instructions
@@ -44,6 +50,6 @@ class CustomPatchUniqueClass < ABPP::Patch
 end
 
 # Add patch as the specific one for some package
-ABPP::SPECIFICS['pkgname'] = CustomPatchUniqueClass
+ABPP.LAST_ADDED = ABPP::SPECIFICS['patch/pkgname'] = CustomPatchUniqueClass
 
 ```

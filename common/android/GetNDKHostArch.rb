@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative '../../main.rb'
+require_relative '../../io.rb'
 require_relative 'utils.rb'
 
 module ABPP
@@ -25,5 +26,7 @@ class GetNDKHostArch < Patch
 		pkgbuild.childs.insert(1, special_hostarch)
 	end
 end
+
+@@LAST_ADDED = COMMON['android/GetNDKHostArch'] = GetNDKHostArch
 
 end #namespace

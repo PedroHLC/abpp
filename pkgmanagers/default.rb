@@ -29,14 +29,14 @@ class PkgMngr::Default < PkgMngr::Base
 	
 	def install (file_or_pkg_name, asdeps=false)
 		if File.exist?(file_or_pkg_name)
-			system(@pacman + ' -U ' + file_or_pkg_name + (asdeps ? ' --asdeps' : '') + SILENT)
+			system(@pacman + ' -U --no-confirm ' + file_or_pkg_name + (asdeps ? ' --asdeps' : '') + SILENT)
 		else
-			system(@pacman + ' -S ' + file_or_pkg_name + (asdeps ? ' --asdeps' : '') + SILENT)
+			system(@pacman + ' -S --no-confirm ' + file_or_pkg_name + (asdeps ? ' --asdeps' : '') + SILENT)
 		end
 	end
 	
 	def uninstall (pkgname)
-		system("#{@pacman} -Rsn #{pkgname}" + SILENT)
+		system("#{@pacman} -Rsn --no-confirm #{pkgname}" + SILENT)
 	end
 end
 
