@@ -7,12 +7,12 @@ Link 'helper.rb' as  'abpp' in any folder listed in your PATH envvar.
 The following example will **D**ownload, **P**atch, save to './output', **M**ake and **I**nstall 'libffi' for Android (targeting ARMv5 using NDK Platform 9)
 Run anywhere where you have write permissions:
 ```
-abpphelper  -DPMI --output=./output --env=android/ndk-plat-9/armv5 libffi android
+abpphelper -DPMI --output=./output --env=android/ndk-plat-9/armv5 libffi android
 ```
 
 For command options help, use:
 ```
-abpphelper  --help
+abpphelper --help
 ```
 
 ## Custom patch create instructions

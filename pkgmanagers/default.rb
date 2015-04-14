@@ -24,7 +24,7 @@ class PkgMngr::Default < PkgMngr::Base
 	end
 	
 	def make (fpath)
-		Dir.chdir(fpath){ system(@makepkg+' -sc'+SILENT) }
+		Dir.chdir(fpath){ system(@makepkg+' -scf'+SILENT) }
 	end
 	
 	def install (file_or_pkg_name, asdeps=false)

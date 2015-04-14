@@ -23,6 +23,7 @@ class AutoconfToAndroid < Patch
 		pkgbuild.set_option('strip', false)
 		pkgbuild.set_option('buildflags', false)
 		pkgbuild.set_option('makeflags', false)
+		pkgbuild.set_option('libtool', false)
 		pkgbuild.set_option('staticlibs', true)
 		
 		pkgbuild.childs.insert(0, Variable.new('ndk_target', $androidenv.target, pkgbuild))

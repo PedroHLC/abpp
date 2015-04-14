@@ -158,20 +158,15 @@ class Helper
 			
 			target_patch_type = nil
 			if File.exists?($arguments[1])
-				puts 'A'
 				require($arguments[1])
 				target_patch_type = LAST_ADDED
 			elsif File.exists?(patch_fname = File.join(ABPP_PATH, 'specifics', $arguments[1]+'.rb'))
-				puts 'B'
 				require(patch_fname)
 				target_patch_type = SPECIFICS[$arguments[1]]
 			elsif @options[:download] and File.exists?(patch_fname = File.join(ABPP_PATH, 'specifics', $arguments[1], $arguments[0]+'.rb'))
-				puts 'C'
 				require(patch_fname)
-				puts patch_fname
 				target_patch_type = SPECIFICS[$arguments[1]+'/'+$arguments[0]]
 			elsif File.exists?(File.join(ABPP_PATH, 'common', $arguments[1]+'.rb'))
-				puts 'D'
 				require(patch_fname)
 				target_patch_type = COMMON[$arguments[1]]
 			else
