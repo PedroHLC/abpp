@@ -37,11 +37,12 @@ class AutoconfToAndroid < Patch
 		build = pkgbuild.find_func('build').last
 		build.childs.insert(1, Variable.new('ndk_toolchainroot', $androidenv.toolchainroot, build))
 		build.childs.insert(2, Command.new('export', ['PKG_CONFIG_PATH="${ndk_sysroot}/usr/lib/pkgconfig"'], build))
-		build.childs.insert(3, Command.new('export', ['CC="${ndk_toolchainroot}/bin/${ndk_target}-gcc --sysroot=${ndk_sysroot}"'], build))
-		build.childs.insert(4, Command.new('export', ['STRIP="${ndk_toolchainroot}/bin/${ndk_target}-strip"'], build))
-		build.childs.insert(5, Command.new('export', ['AR="${ndk_toolchainroot}/bin/${ndk_target}-ar"'], build))
-		build.childs.insert(6, Command.new('export', ['LD="${ndk_toolchainroot}/bin/${ndk_target}-ld"'], build))
-		build.childs.insert(7, Command.new('export', ['RANLIB="${ndk_toolchainroot}/bin/${ndk_target}-ranlib"'], build))
+		toolchain_bin_prefix = "${ndk_toolchainroot}/bin/${ndk_target}-"
+		build.childs.insert(3, Command.new('export', ['CC="'+toolchain_bin_prefix+'gcc --sysroot=${ndk_sysroot}"'], build))
+		build.childs.insert(4, Command.new('export', ['STRIP="'+toolchain_bin_prefix+'strip"'], build))
+		build.childs.insert(5, Command.new('export', ['AR="'+toolchain_bin_prefix+'ar"'], build))
+		build.childs.insert(6, Command.new('export', ['LD="'+toolchain_bin_prefix+'ld"'], build))
+		build.childs.insert(7, Command.new('export', ['RANLIB="'+toolchain_bin_prefix+'ranlib"'], build))
 		
 		confg = build.find_command_pertype(KnownCommands::Configure).first
 		confg.enable('static')

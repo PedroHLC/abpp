@@ -6,12 +6,22 @@ require_relative 'known_commands.rb'
 
 module ABPP
 
+class CodeToken < String
+	attr_reader :match_pos
+	def initialize (value, pos)
+		super(value)
+		@match_pos = pos
+	end
+end
+
 module Utils
 	REGEX_SHELLTOKEN_SCANNER = /"(?:[^"\\]|\\.)*"\S*|'(?:[^'\\]|\\.)*'|\#.*\n|[^\s\=]*\$\{\S*\}\S*|\-\S*|(?<!\\)[\(\)\=\{\},\n]|[^\s#\(\)=\{\},\\]*/
 	
 	def self.list_shell_tokens (str)
 		results = []
-		str.scan(REGEX_SHELLTOKEN_SCANNER) {|match| results << match }
+		str.scan(REGEX_SHELLTOKEN_SCANNER) {|match|
+			results << CodeToken.new(match, Regexp.last_match.offset(0).first)
+		}
 		return results
 	end
 	
