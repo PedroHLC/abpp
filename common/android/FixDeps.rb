@@ -22,14 +22,17 @@ class FixDepsToAndroid < Patch
 		pkgbuild  = @target.cache['PKGBUILD']
 		
 		alldepends = pkgbuild.find_multivar('depends')
-		alldepends[:all].each { |v|
-			if IGNORE.include?(Utils.unquote(v.value[0]))
-				next
-			elsif v.value[0][0] == ?' or v.value[0][0] == ?"
-				v.value[0].insert(1, $androidenv.pkgfullprefix)
-			else
-				v.value[0].insert(0, $androidenv.pkgfullprefix)
-			end
+		alldepends[:all].each { |depends|
+			next if depends.value.empty?
+			depends.value.each {|v|
+				if IGNORE.include?(Utils.unquote(v))
+					next
+				elsif v[0] == ?' or v[0] == ?"
+					v.insert(1, $androidenv.pkgfullprefix)
+				else
+					v.insert(0, $androidenv.pkgfullprefix)
+				end
+			}
 		}
 	end
 end
