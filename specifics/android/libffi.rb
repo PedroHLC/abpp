@@ -22,12 +22,14 @@ class LibFFIToAndroid < Patch
 		pkgbuild.childs.delete_at(pkgbuild.find_var_index('checkdepends').last)
 		pkgbuild.childs.delete_at(pkgbuild.find_var_index('install').last)
 		
-		build = pkgbuild.find_func('build').last
-		confg = build.find_command_pertype(KnownCommands::Configure).first
-		confg.enable('static')
-		confg.disable('shared')
-		confg.set_var('prefix','${ndk_sysroot}')
-		confg.set_var('host','${ndk_target}')
+		dependencies = pkgbuild.find_var('depends').last
+		if !dependencies.nil? and !dependencies.value.nil? and !dependencies.value.empty?
+			dependencies.value.each_with_index { |v,i|
+				next if !v.include?('-glibc')
+				dependencies.value.delete_at(i)
+				break
+			}
+		end
 		
 		package = pkgbuild.find_func('package').last
 		license_install = package.find_command('install').last

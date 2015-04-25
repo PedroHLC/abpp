@@ -19,7 +19,7 @@ class PkgMngr::Yaourt < PkgMngr::Default
 	
 	def download_source (pkgname, outpath)
 		if !outpath.end_with?('/'+pkgname)
-			System.log('Outpath rename not supported yet in Yaourt', :error)
+			Utils.log('Outpath rename not supported yet in Yaourt', :error)
 			exit()
 		end
 		path = outpath.rpartition('/').first

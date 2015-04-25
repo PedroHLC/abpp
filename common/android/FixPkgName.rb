@@ -24,7 +24,7 @@ class FixPkgNameToAndroid < Patch
 		original_pkgname_index = pkgbuild.find_var_index('pkgname').last
 		pkgbuild.childs[original_pkgname_index].rename('pkgname'+SUFIX)
 		
-		new_pkgname = Variable.new('pkgname', "#{$androidenv.pkgprefix}-#{$androidenv.platform}-#{$androidenv.arch}-${pkgname#{SUFIX}}", pkgbuild)
+		new_pkgname = Variable.new('pkgname', "#{$androidenv.pkgfullprefix}${pkgname#{SUFIX}}", pkgbuild)
 		pkgbuild.childs.insert(original_pkgname_index+1, new_pkgname)
 	end
 end

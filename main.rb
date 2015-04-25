@@ -49,7 +49,6 @@ module Parent
 				ch.value.each { |val|
 					val.gsub!(/\$\{#{old_name}\}|\$#{old_name}\b/, '${'+new_name+'}')
 				}
-				puts ch.value.to_s
 			elsif (ch.is_a?(Command)  && !ch.depends.nil? && ch.depends.include?(old_name))	
 				ch.key.gsub!(/\$\{#{old_name}\}|\$#{old_name}\b/, '${'+new_name+'}')
 				ch.arguments.each { |arg|
@@ -170,7 +169,7 @@ class Command
 		if i.nil?
 			@arguments << value
 		elsif @arguments[i].nil?
-			@arguments.inser(i, value)
+			@arguments.insert(i, value)
 		else
 			@arguments[i] = value
 		end
@@ -217,7 +216,7 @@ module CommandsParent
 		return results
 	end
 	
-	def find_command_pertype_index (type)
+	def find_command_index_pertype (type)
 		results = []
 		@childs.each_with_index { |ch,i|
 			results << i if ch.is_a?(type)

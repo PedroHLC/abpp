@@ -41,6 +41,21 @@ module Utils
 		end
 		return result
 	end
+	
+	def self.virtualenv_to_bash (hash, parent)
+		result = []
+		hash.each { |key,venv|
+			if venv[0] != :replace
+				originalval = "${#{key}}"
+				val = (venv[0] == :append_begin ? venv[1].to_s+originalval : originalval)
+				val += venv[1].to_s if venv[0] == :append_end
+			else
+				val = venv[1]
+			end
+			result << Command.new('export', ["#{key}=\"#{val}\""], parent)
+		}
+		return result
+	end
 end
 
 module ErrorHander
@@ -88,15 +103,14 @@ class ShellDocument
 					if token.size > 1 # Bug bypass
 						if token[token.size-1] == ?)
 							params << token[1..token.size-2]
+						else
+							params << token[1..token.size-1]
 						end
-						params << token[1..token.size-1]
 					end
-					
 					loop do
 						token = token_list[ti+=1]
 						return ti if (token == nil)
 						if token[0] == ?)
-							token = token_list[ti+=1]
 							break;
 						elsif token[0] == ?,
 							Utils.log('< Useless comma')
@@ -107,6 +121,7 @@ class ShellDocument
 							params << token
 						end
 					end if token[token.size-1] != ?)
+					token = token_list[ti+=1]
 					
 					loop do
 						next_ti = Utils.next_util_token(token_list, ti)
@@ -148,13 +163,13 @@ class ShellDocument
 						if token.size > 1 # Bug bypass
 							if token[token.size-1] == ?)
 								var_value << token[1..token.size-2]
+							else
+								var_value << token[1..token.size-1]
 							end
-							var_value << token[1..token.size-1]
 						end
 						loop do
 							token = token_list[ti+=1]
 							if token[0] == ?)
-								token = token_list[ti+=1]
 								break
 							elsif token.strip.size == "\n"
 								Utils.log('< Empty line', :flood)
@@ -164,6 +179,7 @@ class ShellDocument
 								var_value << token
 							end
 						end if token[token.size-1] != ?)
+						token = token_list[ti+=1]
 					else
 						var_value = token
 						
@@ -231,7 +247,9 @@ class ShellDocument
 	end
 	
 	def revert #loads or undo any unsaved modification
-		file = File.new(File.join(@package.path, @filename), 'rb')
+		filepath = File.join(@package.path, @filename)
+		return if !File.exists?(filepath)
+		file = File.new(filepath, 'rb')
 		interpret(Utils.list_shell_tokens(file.read.to_s), 0, [self])
 		file.close
 	end

@@ -62,7 +62,7 @@ class Helper
 			@options[:env] = value;
 		end
 		
-		opts.on('-d', '--[no-]patchdeps', 'Also apply patch to all uninstalled dependencies' , ('Not implemented yet')) do |value|
+		opts.on('-d', '--[no-]patchdeps', 'Also apply patch to all uninstalled dependencies' , '(Not implemented yet)') do |value|
 			@options[:patchdeps] = value;
 		end
 		
