@@ -32,27 +32,29 @@ class AutoconfToAndroid < Patch
 		pkgbuild.childs.insert(0, Variable.new('ndk_target', $androidenv.target, pkgbuild))
 		pkgbuild.childs.insert(1, Variable.new('ndk_sysroot', $androidenv.sysroot, pkgbuild))
 		
-		dependencies = pkgbuild.find_var('depends').last
-		if !dependencies.nil? and !dependencies.value.empty?
-			dependencies.value.push(*DEPS)
-		else
+		alldepends = pkgbuild.find_multivar('depends')
+		if alldepends[:all].empty?
 			dependencies = Variable.new('depends', DEPS, pkgbuild)
 			pkgbuild.childs.insert(pkgbuild.find_var_index('source').first, dependencies)
+		else
+			alldepends[:all].each {|dependencies| dependencies.value.push(*DEPS) }
 		end
 		
 		
-		pkgdesc = pkgbuild.find_var('pkgdesc').last
-		pkgdesc.set_value("\"#{Utils.unquote(pkgdesc.value[0])} (${ndk_target})\"")
+		pkgdescs = pkgbuild.find_multivar('pkgdesc')
+		pkgdescs[:all].each {|pkgdesc|
+			pkgdesc.set_value("\"#{Utils.unquote(pkgdesc.value[0])} (${ndk_target})\"")
+		}
 		
 		build = pkgbuild.find_func('build').last
 		build.childs.insert(1, Variable.new('ndk_toolchainroot', $androidenv.toolchainroot, build))
 		build.childs.insert(2, Command.new('export', ['PKG_CONFIG_PATH="${ndk_sysroot}/usr/lib/pkgconfig"'], build))
 		toolchain_bin_prefix = "${ndk_toolchainroot}/bin/${ndk_target}-"
 		build.childs.insert(3, Command.new('export', ['CC="'+toolchain_bin_prefix+'gcc --sysroot=${ndk_sysroot}"'], build))
-		build.childs.insert(5, Command.new('export', ['AR="'+toolchain_bin_prefix+'ar"'], build))
-		build.childs.insert(6, Command.new('export', ['LD="'+toolchain_bin_prefix+'ld"'], build))
-		build.childs.insert(7, Command.new('export', ['RANLIB="'+toolchain_bin_prefix+'ranlib"'], build))
-		build.childs.insert(8, *Utils.virtualenv_to_bash($androidenv.sysenv, build))
+		build.childs.insert(4, Command.new('export', ['AR="'+toolchain_bin_prefix+'ar"'], build))
+		build.childs.insert(5, Command.new('export', ['LD="'+toolchain_bin_prefix+'ld"'], build))
+		build.childs.insert(6, Command.new('export', ['RANLIB="'+toolchain_bin_prefix+'ranlib"'], build))
+		build.childs.insert(7, *Utils.virtualenv_to_bash($androidenv.sysenv, build))
 		
 		confg = build.find_command_pertype(KnownCommands::Configure).first
 		confg.enable('static')

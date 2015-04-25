@@ -20,6 +20,7 @@ class LibIConvToAndroid < Patch
 		build_i = pkgbuild.find_func_index('build').last
 		build  = pkgbuild.childs[build_i]
 		
+		#!TODO: Move instead of destroy and recreate
 		build.childs.delete_at(*build.find_command_index('sed'))
 		build.childs.delete_at(build.find_command_index('cp').last)
 		

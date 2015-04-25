@@ -7,6 +7,8 @@ require_relative 'utils.rb'
 module ABPP
 
 class FixDepsToAndroid < Patch
+	IGNORE = ['cmake','make']
+	
 	def initialize(target)
 		AndroidEnviroment.check_loaded()
 		super(target)
@@ -19,16 +21,16 @@ class FixDepsToAndroid < Patch
 		super()
 		pkgbuild  = @target.cache['PKGBUILD']
 		
-		dependencies = pkgbuild.find_var('depends').last
-		if !dependencies.nil? and !dependencies.value.nil? and !dependencies.value.empty?
-			dependencies.value.each { |v|
-				if v[0] == ?' or v[0] == ?"
-					v.insert(1, $androidenv.pkgfullprefix)
-				else
-					v.insert(0, $androidenv.pkgfullprefix)
-				end
-			}
-		end
+		alldepends = pkgbuild.find_multivar('depends')
+		alldepends[:all].each { |v|
+			if IGNORE.include?(Utils.unquote(v.value[0]))
+				next
+			elsif v.value[0][0] == ?' or v.value[0][0] == ?"
+				v.value[0].insert(1, $androidenv.pkgfullprefix)
+			else
+				v.value[0].insert(0, $androidenv.pkgfullprefix)
+			end
+		}
 	end
 end
 

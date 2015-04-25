@@ -73,6 +73,17 @@ module Parent
 			ch.dump(out, indent+1, beautiful)
 		}
 	end
+	
+	def find_regex_perkey (regex, allow=[:var, :func, :cmd, :others])
+		result = {}
+		@childs.each_with_index { |ch,i|
+			next if (ch.is_a?(ABPP::Variable) and !(allow.include?(:var))) or
+				(ch.is_a?(Command) and !(allow.include?(:cmd))) or
+				(ch.is_a?(Variable) and !(allow.include?(:func))) or
+			result[i] = ch if ch.key =~ regex
+		}
+		return result
+	end
 end
 
 class Variable
@@ -355,6 +366,20 @@ class PKGBUILD < ShellDocument
 			}
 			options_var.value << new_value
 		end
+	end
+	
+	def find_multivar(key)
+		result = {}
+		result[:all] = []
+		result[:main] = find_var(key)
+		result[:all].push(*result[:main])
+		subpkgs = find_regex_perkey(/package_/, :func)
+		return result if subpkgs.empty?
+		subpkgs.each { |sp|
+			result[sp] = sp.find_var(key)
+			result[:all].push(*result[sp])
+		}
+		return result
 	end
 end
 
