@@ -11,6 +11,15 @@ module ABPP
 
 class AutoconfToAndroid < Patch
 	DEPS = ['\'android-ndk\'']
+	BIN = "${ndk_toolchainroot}/bin/${ndk_target}-"
+	SYSENVS = {
+		'PKG_CONFIG_PATH' => [:replace, '${ndk_sysroot}/usr/lib/pkgconfig'],
+		'CC' => [:replace, "#{BIN}gcc --sysroot=${ndk_sysroot}"],
+		'CXX' => [:replace, "#{BIN}g++ --sysroot=${ndk_sysroot}"],
+		'AR' => [:replace, "#{BIN}ar"],
+		'LD' => [:replace, "#{BIN}ld"],
+		'RANLIB' => [:replace, "#{BIN}ranlib"]
+	}
 	
 	def initialize(target)
 		super(target)
@@ -26,7 +35,6 @@ class AutoconfToAndroid < Patch
 		pkgbuild.set_option('strip', false)
 		pkgbuild.set_option('buildflags', false)
 		pkgbuild.set_option('makeflags', false)
-		pkgbuild.set_option('libtool', false)
 		pkgbuild.set_option('staticlibs', true)
 		
 		pkgbuild.childs.insert(0, Variable.new('ndk_target', $androidenv.target, pkgbuild))
@@ -47,14 +55,9 @@ class AutoconfToAndroid < Patch
 		}
 		
 		build = pkgbuild.find_func('build').last
-		build.childs.insert(1, Variable.new('ndk_toolchainroot', $androidenv.toolchainroot, build))
-		build.childs.insert(2, Command.new('export', ['PKG_CONFIG_PATH="${ndk_sysroot}/usr/lib/pkgconfig"'], build))
-		toolchain_bin_prefix = "${ndk_toolchainroot}/bin/${ndk_target}-"
-		build.childs.insert(3, Command.new('export', ['CC="'+toolchain_bin_prefix+'gcc --sysroot=${ndk_sysroot}"'], build))
-		build.childs.insert(4, Command.new('export', ['AR="'+toolchain_bin_prefix+'ar"'], build))
-		build.childs.insert(5, Command.new('export', ['LD="'+toolchain_bin_prefix+'ld"'], build))
-		build.childs.insert(6, Command.new('export', ['RANLIB="'+toolchain_bin_prefix+'ranlib"'], build))
-		build.childs.insert(7, *Utils.virtualenv_to_bash($androidenv.sysenv, build))
+		new_i = build.find_var_index('cd').first
+		build.childs.insert(new_i+=1, Variable.new('ndk_toolchainroot', $androidenv.toolchainroot, build))
+		build.childs.insert(new_i+=1, *Utils.virtualenv_to_bash(SYSENVS.merge($androidenv.sysenv), build))
 		
 		confg = build.find_command_pertype(KnownCommands::Configure).first
 		confg.enable('static')

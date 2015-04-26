@@ -47,7 +47,7 @@ module Utils
 		hash.each { |key,venv|
 			if venv[0] != :replace
 				originalval = "${#{key}}"
-				val = (venv[0] == :append_begin ? venv[1].to_s+originalval : originalval)
+				val = (venv[0] == :append_begin ? venv[1].to_s+' '+originalval : originalval+' ')
 				val += venv[1].to_s if venv[0] == :append_end
 			else
 				val = venv[1]
@@ -278,6 +278,46 @@ class Package
 			end
 		}
 		@path = new_path
+	end
+end
+
+class BinaryDocument < Document
+	def initialize (path, filename)
+		@path = path
+		@filename = filename
+	end
+	
+	def revert
+		@contents = File.read(File.join(@path, @filename))
+	end
+	
+	def save_as (new_path)
+		file = File.new(File.join(new_path, @filename), 'wb')
+		file.write @contents
+		file.close
+	end
+	
+	def sum(digest_class)
+		return digest_class.hexdigest(@contents)
+	end
+end
+
+class AssetDocument < Document
+	def initialize (path, filename)
+		@path = path
+		@filename = filename
+	end
+	
+	def revert
+		# This type is here only for cloning
+	end
+	
+	def save_as (new_path)
+		FileUtils.cp(File.join(@path, @filename), new_path)
+	end
+	
+	def sum(digest_class)
+		return digest_class.file(File.join(@path, @filename)).hexdigest
 	end
 end
 

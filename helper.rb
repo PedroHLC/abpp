@@ -156,6 +156,17 @@ class Helper
 				return 5
 			end
 			
+			if !@options[:env].nil?
+				if File.exists?(@options[:env])
+					require(@options[:env])
+				elsif File.exists?(env_fname = File.join(ABPP_PATH, 'env', @options[:env]+'.rb'))
+					require(env_fname)
+				else
+					Utils.log("\"#{@options[:env]}\" isn't valid.", :error)
+					return 9
+				end
+			end
+			
 			target_patch_type = nil
 			if File.exists?($arguments[1])
 				require($arguments[1])
@@ -172,17 +183,6 @@ class Helper
 			else
 				Utils.log("\"#{$arguments[1]}\" isn't a valid patch.", :error)
 				return 8
-			end
-			
-			if !@options[:env].nil?
-				if File.exists?(@options[:env])
-					require(@options[:env])
-				elsif File.exists?(env_fname = File.join(ABPP_PATH, 'env', @options[:env]+'.rb'))
-					require(env_fname)
-				else
-					Utils.log("\"#{@options[:env]}\" isn't valid.", :error)
-					return 9
-				end
 			end
 			
 			working_pkg = ABPP::Package.new(source_path)

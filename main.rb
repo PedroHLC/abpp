@@ -381,6 +381,16 @@ class PKGBUILD < ShellDocument
 		}
 		return result
 	end
+	
+	def delete_depends(list)
+		alldependencies = find_multivar('depends')[:all]
+		return if alldependencies.empty?
+		alldependencies.each { |dependencies|
+			if !dependencies.value.nil? and !dependencies.value.empty?
+				dependencies.value.delete_if{ |v| list.include?(Utils.unquote(v)) }
+			end
+		}
+	end
 end
 
 class Package
