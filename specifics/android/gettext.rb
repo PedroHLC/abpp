@@ -2,11 +2,11 @@
 
 require 'digest'
 
-require_relative '../../main.rb'
-require_relative '../../known_commands.rb'
-require_relative '../../common/android/Autoconf.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'main.rb'
+PathMngr.require :abpp, 'known_commands.rb'
+PathMngr.require :common, 'android/Autoconf.rb'
 
 class GetTextToAndroid < Patch
 	DELETEDEPS = [
@@ -16,27 +16,35 @@ class GetTextToAndroid < Patch
 		$androidenv.pkgfullprefix+'glib2',
 		$androidenv.pkgfullprefix+'libunistring'
 	]
+	DEPS = [
+		"'#{$androidenv.pkgfullprefix}libiconv'"
+	]
 	ASSETSPATH = File.join(File.expand_path(File.dirname(__FILE__)), 'assets', 'gettext')
 	
 	def initialize(target)
 		super(target)
 		@depends = [AutoconfToAndroid]
-		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'] == nil
-		@target.cache['gettext.install'] = :deleted
-		@target.cache['msginit_fix.patch'] = AssetDocument.new(ASSETSPATH, 'msginit_fix.patch')
+		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'].nil?
+		@target.cache['gettext.install'] = Install.new('gettext.install', target) if @target.cache['gettext.install'].nil?
+		@target.cache['msginit_fix.patch'] = AssetDocument.new(ASSETSPATH, 'msginit_fix.patch') if @target.cache['msginit_fix.patch'].nil?
 	end
 	
 	def apply()
 		super()
+		install = @target.cache['gettext.install']
+		
+		infodir = install.find_var('infodir').first
+		infodir.set_value(File.join($androidenv.sysroot, infodir.value[0]))
+		
 		pkgbuild  = @target.cache['PKGBUILD']
 		
-		pkgbuild.childs.delete_at(*pkgbuild.find_func_index('check'))
-		
+		pkgbuild.deleteall_func('check')
 		pkgbuild.delete_depends(DELETEDEPS)
+		pkgbuild.append_depends(DEPS)
+		
+		pkgbuild.find_var('source').last.value.push 'msginit_fix.patch'
 		
 		build  = pkgbuild.find_func('build').last
-		
-		pkgbuild.childs.delete_at(*pkgbuild.find_var_index('install'))
 		
 		if (prepare = pkgbuild.find_func('prepare').last).nil?
 			prepare = Function.new('prepare', [], pkgbuild)

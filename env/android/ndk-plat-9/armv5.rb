@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require_relative '../../../common/android/utils.rb'
+ABPP::PathMngr.require :common, 'android/utils.rb'
 
 ndk = '/opt/android-ndk'
 ndk_target_platform = 9

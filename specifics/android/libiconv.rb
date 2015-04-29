@@ -1,16 +1,16 @@
 #!/usr/bin/env ruby
 
-require_relative '../../main.rb'
-require_relative '../../known_commands.rb'
-require_relative '../../common/android/Autoconf.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'main.rb'
+PathMngr.require :abpp, 'known_commands.rb'
+PathMngr.require :common, 'android/Autoconf.rb'
 
 class LibIConvToAndroid < Patch
 	def initialize(target)
 		super(target)
 		@depends = [AutoconfToAndroid]
-		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'] == nil
+		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'].nil?
 	end
 	
 	def apply()
@@ -21,7 +21,7 @@ class LibIConvToAndroid < Patch
 		build  = pkgbuild.childs[build_i]
 		
 		#!TODO: Move instead of destroy and recreate
-		build.childs.delete_at(*build.find_command_index('sed'))
+		build.deleteall_command('sed')
 		build.childs.delete_at(build.find_command_index('cp').last)
 		
 		prepare = Function.new('prepare', [], pkgbuild)
@@ -47,6 +47,12 @@ class LibIConvToAndroid < Patch
 		package.find_command('mv').each { |mv_func|
 			mv_func.arguments[0].gsub!('${pkgdir}', '"${pkgdir}/${ndk_sysroot}"')
 		}
+		
+		# Let's make it compatible with glibc iconv, as Android doesn't use glibc at all #!SHOULDN'T BE REQUIRED AT ALL
+		#package.childs.push(Command.new('ln', ['-s','"${pkgdir}/${ndk_sysroot}"/usr/include/{libiconv.h,iconv.h}'], prepare))
+		#package.childs.push(Command.new('ln', ['-s','"${pkgdir}/${ndk_sysroot}"/usr/bin/{libiconv,iconv}'], prepare))
+		config.arguments.delete_if{|a| a.start_with?('LIBDIR=') } if config.arguments.is_a?(Array)
+		package.deleteall_command('mv')
 	end
 end
 

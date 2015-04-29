@@ -19,7 +19,7 @@ abpphelper --help
 ```
 #!/usr/bin/env ruby
 
-require 'abpp/main.rb'
+ABPP::PathMngr.require :abpp, 'main.rb'
 
 class CustomPatchUniqueClass < ABPP::Patch
 	def initialize(target)
@@ -34,6 +34,9 @@ class CustomPatchUniqueClass < ABPP::Patch
 		super()
 		# Alias
 		pkgbuild  = @target.cache['PKGBUILD']
+		
+		# Replace some var value
+		pkgbuild.find_var('example').last.set_value('foo')
 		
 		# Search last occurence of 'pkgname' position
 		original_pkgname_index = pkgbuild.find_var_index('pkgname').last

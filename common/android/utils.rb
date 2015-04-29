@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require_relative '../../main.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'main.rb'
 
 class AndroidEnviroment
 	attr_accessor :pkgprefix, :platform, :arch, :sysroot, :target, :toolchainver, :toolchainroot, :sysenv, :pkgfullprefix

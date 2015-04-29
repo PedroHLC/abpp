@@ -42,6 +42,41 @@ module Utils
 	end
 end
 
+PathMngr = Class.new do
+	attr_reader :paths, :selfpath
+	def initialize
+		@selfpath = File.expand_path(File.dirname(__FILE__))
+		@usrpath = File.join(Dir.home, '.local', 'share', 'abpp')
+		
+		common = [File.join(@selfpath, 'common'), File.join(@usrpath, 'common')]
+		env = [File.join(@selfpath, 'env'), File.join(@usrpath, 'env')]
+		specifics = [File.join(@selfpath, 'specifics'), File.join(@usrpath, 'specifics')]
+		pkgmanagers = [File.join(@selfpath, 'pkgmanagers'), File.join(@usrpath, 'pkgmanagers')]
+		
+		common.push(*ENV['ABPP_COMMON_PATH'].split(';'))		if !ENV['ABPP_COMMON_PATH'].nil? and !ENV['ABPP_COMMON_PATH'].empty?
+		env.push(*ENV['ABPP_ENV_PATH'].split(';'))				if !ENV['ABPP_ENV_PATH'].nil? and !ENV['ABPP_ENV_PATH'].empty?
+		specifics.push(*ENV['ABPP_SPECIFICS_PATH'].split(';'))	if !ENV['ABPP_SPECIFICS_PATH'].nil? and !ENV['ABPP_SPECIFICS_PATH'].empty?
+		pkgmanagers.push(*ENV['ABPP_PKGMNGR_PATH'].split(';'))	if !ENV['ABPP_PKGMNGR_PATH'].nil? and !ENV['ABPP_PKGMNGR_PATH'].empty?
+		
+		@paths = {
+			:abpp => [@selfpath],
+			:common => common,
+			:env => env,
+			:specifics => specifics,
+			:pkgmanagers => pkgmanagers
+		}
+	end
+	
+	def require (source, filepathname)
+		@paths[source].reverse_each { |basepath|
+			trying = File.join(basepath, filepathname)
+			if File.exist?(trying)
+				Kernel.require(trying)
+			end
+		}
+	end
+end.new
+
 module Parent
 	def on_obj_rename (old_name, new_name)
 		@childs.each { |ch|
@@ -83,6 +118,10 @@ module Parent
 			result[i] = ch if ch.key =~ regex
 		}
 		return result
+	end
+	
+	def deleteall_pertype (type)
+		@childs.delete_if { |ch| ch.is_a?(type) }
 	end
 end
 
@@ -130,9 +169,19 @@ class Variable
 		out.write ("\t"*indent) if beautiful
 		out.write @key
 		out.write '='
-		out.write '(' if @value.size > 1
-		out.write @value.join (' ')
-		out.write ')' if @value.size > 1
+		 if @value.size > 1
+			out.write '('
+			out.write @value.join (' ')
+			out.write ')'
+		elsif @value.size == 1 and (val = @value[0])[0] != ?' and val =~ /[^$]{/
+			out.write '('
+			out.write val
+			out.write ')'
+		elsif @value.size == 0
+			out.write '()' #Is this right??
+		else
+			out.write @value.join (' ')
+		end
 		out.write(beautiful ? "\n" : ';')
 	end
 end
@@ -156,6 +205,10 @@ module VariablesParent
 			end
 		}
 		return results
+	end
+	
+	def deleteall_var (key)
+		@childs.delete_if { |ch| ch.is_a?(Variable) and ch.key == key }
 	end
 end
 
@@ -242,6 +295,10 @@ module CommandsParent
 		}
 		return results
 	end
+	
+	def deleteall_command (key)
+		@childs.delete_if { |ch| ch.is_a?(Command) and ch.key == key }
+	end
 end
 
 class Function
@@ -311,6 +368,10 @@ module FunctionsParent
 			results << ch if ch.key == key
 		}
 		return results
+	end
+	
+	def deleteall_func (key)
+		@childs.delete_if { |ch| ch.is_a?(Function) and ch.key == key }
 	end
 end
 
@@ -391,6 +452,19 @@ class PKGBUILD < ShellDocument
 			end
 		}
 	end
+	
+	def append_depends(list)
+		alldepends = find_multivar('depends')
+		if alldepends[:all].empty?
+			dependencies = Variable.new('depends', list, self)
+			@childs.insert(find_var_index('source').first, dependencies)
+		else
+			alldepends[:all].each {|dependencies| dependencies.value.push(*list) }
+		end
+	end
+end
+
+class Install < ShellDocument
 end
 
 class Package

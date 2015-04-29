@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require_relative '../pkgmanager.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'pkgmanager.rb'
 
 class PkgMngr::Default < PkgMngr::Base
 	SVN_REPO = 'svn://svn.archlinux.org'

@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require_relative '../../main.rb'
-require_relative '../../io.rb'
-require_relative 'utils.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'main.rb'
+PathMngr.require :abpp, 'io.rb'
+PathMngr.require :common, 'android/utils.rb'
 
 class FixPkgNameToAndroid < Patch
 	SUFIX = '_befdroid'

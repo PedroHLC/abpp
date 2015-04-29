@@ -1,13 +1,13 @@
 #!/usr/bin/env ruby
 
-require_relative '../../main.rb'
-require_relative '../../io.rb'
-require_relative '../../known_commands.rb'
-require_relative 'GetNDKHostArch.rb'
-require_relative 'FixPkgName.rb'
-require_relative 'FixDeps.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'main.rb'
+PathMngr.require :abpp, 'io.rb'
+PathMngr.require :abpp, 'known_commands.rb'
+PathMngr.require :common, 'android/GetNDKHostArch.rb'
+PathMngr.require :common, 'android/FixPkgName.rb'
+PathMngr.require :common, 'android/FixDeps.rb'
 
 class AutoconfToAndroid < Patch
 	DEPS = ['\'android-ndk\'']
@@ -40,14 +40,7 @@ class AutoconfToAndroid < Patch
 		pkgbuild.childs.insert(0, Variable.new('ndk_target', $androidenv.target, pkgbuild))
 		pkgbuild.childs.insert(1, Variable.new('ndk_sysroot', $androidenv.sysroot, pkgbuild))
 		
-		alldepends = pkgbuild.find_multivar('depends')
-		if alldepends[:all].empty?
-			dependencies = Variable.new('depends', DEPS, pkgbuild)
-			pkgbuild.childs.insert(pkgbuild.find_var_index('source').first, dependencies)
-		else
-			alldepends[:all].each {|dependencies| dependencies.value.push(*DEPS) }
-		end
-		
+		pkgbuild.append_depends(DEPS)
 		
 		pkgdescs = pkgbuild.find_multivar('pkgdesc')
 		pkgdescs[:all].each {|pkgdesc|

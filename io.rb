@@ -288,7 +288,11 @@ class BinaryDocument < Document
 	end
 	
 	def revert
-		@contents = File.read(File.join(@path, @filename))
+		if File.exist?(filepath=File.join(@path, @filename))
+			@contents = File.read(filepath)
+		else
+			@contents = ''
+		end
 	end
 	
 	def save_as (new_path)

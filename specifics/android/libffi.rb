@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require_relative '../../main.rb'
-require_relative '../../known_commands.rb'
-require_relative '../../common/android/Autoconf.rb'
-
 module ABPP
+
+PathMngr.require :abpp, 'main.rb'
+PathMngr.require :abpp, 'known_commands.rb'
+PathMngr.require :common, 'android/Autoconf.rb'
 
 class LibFFIToAndroid < Patch
 	DELETEDEPS = [$androidenv.pkgfullprefix+'glibc']
@@ -12,17 +12,21 @@ class LibFFIToAndroid < Patch
 	def initialize(target)
 		super(target)
 		@depends = [AutoconfToAndroid]
-		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'] == nil
-		@target.cache['libffi.install'] = :deleted
+		@target.cache['PKGBUILD'] = PKGBUILD.new (target) if @target.cache['PKGBUILD'].nil?
+		@target.cache['libffi.install'] = Install.new('libffi.install', target)	if @target.cache['libffi.install'].nil?
 	end
 	
 	def apply()
 		super()
+		install = @target.cache['libffi.install']
+		
+		infodir = install.find_var('infodir').first
+		infodir.set_value(File.join($androidenv.sysroot, infodir.value[0]))
+		
 		pkgbuild  = @target.cache['PKGBUILD']
 		
-		pkgbuild.childs.delete_at(*pkgbuild.find_func_index('check'))
-		pkgbuild.childs.delete_at(*pkgbuild.find_var_index('checkdepends'))
-		pkgbuild.childs.delete_at(*pkgbuild.find_var_index('install'))
+		pkgbuild.deleteall_func('check')
+		pkgbuild.deleteall_var('checkdepends')
 		
 		pkgbuild.delete_depends(DELETEDEPS)
 		

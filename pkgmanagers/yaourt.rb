@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require_relative 'default.rb'
-
 module ABPP
+
+PathMngr.require :pkgmanagers, 'default.rb'
 
 class PkgMngr::Yaourt < PkgMngr::Default
 	def initialize (bin='yaourt', makepkg='makepkg')
